@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+	<head></head>
+	<body>
+	<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script>
+	var canvas;
+	var canvasContext;
+	var ballX = 50;
+	var ballY = 50;
+	var ballSpeedX = 10;
+	var ballSpeedY = 4;
+	var paddle1Y = 250;
+	var paddle2Y = 250;
+	const PADDLE_HEIGHT = 100;
+	const PADLE_THICKNESS = 10;
+	var player1Score = 0;
+	var player2Score = 0;
+	const WINNING_SCORE = 7;
+	var gameOver = false;
+	var winner;
+
+	function calculateMousePos(evt){
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement;
+	var mouseX = evt.clientX - rect.left - root.scrollLeft;
+	var mouseY = evt.clientY - rect.top - root.scrollTop;
+	return {
+			x: mouseX,
+			y: mouseY
+			};
+};
+		
+	function handleMouseClick(evt){
+		if(gameOver){
+			player1Score = 0;
+			player2Score = 0;
+			gameOver = false;
+		}
+	};
+	window.onload = function(){
+		canvas = document.getElementById("gameCanvas");
+		canvasContext = canvas.getContext("2d");
+		var framesPerSecond = 30;
+		window.setInterval(function(){moveEverything();
+		drawEverything();},1000/framesPerSecond);	
+	
+		canvas.addEventListener("mousedown", handleMouseClick);
+		canvas.addEventListener("mousemove",function(evt){
+			var mousePos = calculateMousePos(evt);
+			paddle1Y = mousePos.y -(PADDLE_HEIGHT / 2);
+			}
+		);
+	};
+	function computerMovement(){
+		if (paddle2Y + (PADDLE_HEIGHT / 2) < ballY-35){
+			paddle2Y += 6;
+		} else if (paddle2Y + (PADDLE_HEIGHT / 2) > ballY+35){
+			paddle2Y -= 6;
+		}
+};
+	function ballReset(){
+	if(player1Score >= WINNING_SCORE){winner = "player 1";}
+	if(player2Score >= WINNING_SCORE){winner = "player 2";}
+	if (player1Score >= WINNING_SCORE || player2Score >= WINNING_SCORE ){
+			gameOver = true;
+		}
+		ballX = canvas.width/2;
+		ballY = canvas.height / 2;
+		ballSpeedX = -ballSpeedX;
+		
+	};
+	function moveEverything(){
+		if(gameOver){return;}
+		
+		computerMovement();
+		ballX += ballSpeedX;
+		ballY += ballSpeedY;
+		
+		if(ballX < 5){
+			if(ballY > paddle1Y && ballY < (paddle1Y + PADDLE_HEIGHT)){
+				ballSpeedX = -ballSpeedX;
+				ballSpeedY = -ballSpeedY;
+						
+				var deltaY = ballY - (paddle1Y + PADDLE_HEIGHT /2);
+				ballSpeedY = deltaY *0.35;
+			}else {
+				player2Score ++;
+				ballReset();
+			}	
+		}
+		if (ballX > canvas.width -5){
+			if(ballY > paddle2Y && ballY < (paddle2Y + PADDLE_HEIGHT)){
+				ballSpeedX = -ballSpeedX;
+				
+				var deltaY = ballY - (paddle2Y + PADDLE_HEIGHT /2);
+				ballSpeedY = deltaY *0.35;
+			}else {
+				player1Score ++; // must be before reset 
+				ballReset();	
+			}		
+		}
+		if(ballY < 0){
+			ballSpeedY = -ballSpeedY;
+		}
+		if(ballY > canvas.height){
+			ballSpeedY = -ballSpeedY;
+		}
+	};
+	function drawNet(){
+		for(var i = 0; i < canvas.height; i+=30){
+		colorRect((canvas.width/2)-1,i,2,10);
+		}
+	};
+	function drawEverything(){
+		
+		colorRect(0,0,canvas.width,canvas.height,"#0C0471");	// draw background
+		colorRect(0,paddle1Y,PADLE_THICKNESS,PADDLE_HEIGHT,"white"); // draw the leftSide paddle
+		colorRect(canvas.width-PADLE_THICKNESS,paddle2Y,PADLE_THICKNESS,PADDLE_HEIGHT,"white"); // draw the rightSide paddle
+		colorCircle(ballX,ballY,10,"white");			// draw the ball
+		canvasContext.font = 'italic 20pt Calibri';
+		canvasContext.fillStyle = "white";
+		canvasContext.fillText("Player 1 ",80,50);
+		canvasContext.fillText("Player 2 ",canvas.width-150,50);
+		drawNet();
+		canvasContext.fillStyle = "red";
+		canvasContext.fillText("score " + player1Score,80,100);
+		canvasContext.fillText("score " + player2Score,canvas.width-150,100);
+		if(gameOver){
+		canvasContext.fillStyle = "white";
+		canvasContext.fillText(winner + " wins",(canvas.width/2)-75,155);
+		canvasContext.fillText(" Clik anywhere to continue",(canvas.width/2)-150,450)
+	}
+	};
+	
+	function colorRect(leftX, topY, width, height, drawColor){
+		canvasContext.fillStyle = drawColor;
+		canvasContext.fillRect(leftX, topY, width, height);
+	};
+	function colorCircle(centerX, centerY, radius, drawColor){
+		canvasContext.fillStyle = drawColor;
+		canvasContext.beginPath();			// draw the ball
+		canvasContext.arc(centerX, centerY, radius,0, Math.PI*2, true );
+		canvasContext.fill();
+	};
+	</script>
+	</body>
+	<html>
